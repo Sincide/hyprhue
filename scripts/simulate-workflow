@@ -348,12 +348,12 @@ main() {
     log_info "Results:"
     log_success "  Passed: ${SIMULATION_PASSED}"
     log_warning "  Warnings: ${SIMULATION_WARNINGS}"
-    log_error "  Failed: ${SIMULATION_FAILED}"
-    
     if [[ ${SIMULATION_FAILED} -eq 0 ]]; then
+        log_success "  Failed: ${SIMULATION_FAILED}"
         log_success "🎉 All critical tests passed! HyprHue workflow is ready."
         exit 0
     else
+        log_error "  Failed: ${SIMULATION_FAILED}"
         log_error "❌ ${SIMULATION_FAILED} critical issues found. Please fix before deployment."
         exit 1
     fi
