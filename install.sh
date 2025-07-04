@@ -335,24 +335,45 @@ install_ollama() {
     fi
     
     # Start Ollama service
+    log_info "Starting Ollama service..."
     sudo systemctl enable ollama
     sudo systemctl start ollama
     
-    # Wait for Ollama to be ready
-    log_info "Waiting for Ollama to be ready..."
+    # Wait for Ollama service to be active
+    log_info "Waiting for Ollama service to start..."
     local retry_count=0
-    while ! ollama list &> /dev/null; do
+    while ! systemctl is-active --quiet ollama; do
         if [[ $retry_count -gt 30 ]]; then
-            log_error "Ollama failed to start after 30 seconds"
+            log_error "Ollama service failed to start after 30 seconds"
+            log_error "Service status: $(systemctl is-active ollama)"
+            log_error "Service logs: $(sudo journalctl -u ollama -n 5 --no-pager)"
             exit 1
         fi
         sleep 1
         ((retry_count++))
+        log_debug "Waiting for Ollama service... ($retry_count/30)"
+    done
+    
+    # Wait for Ollama API to be ready
+    log_info "Waiting for Ollama API to be ready..."
+    retry_count=0
+    while ! curl -s http://localhost:11434/api/tags &> /dev/null; do
+        if [[ $retry_count -gt 60 ]]; then
+            log_error "Ollama API failed to respond after 60 seconds"
+            log_error "Skipping model download - you can run 'ollama pull llava:7b' later"
+            log_success "Ollama installed (API not ready)"
+            return
+        fi
+        sleep 1
+        ((retry_count++))
+        log_debug "Waiting for Ollama API... ($retry_count/60)"
     done
     
     # Pull vision-capable model
     log_info "Pulling vision-capable AI model (this may take a while)..."
-    ollama pull llava:7b
+    if ! ollama pull llava:7b; then
+        log_warning "Failed to pull llava:7b model - you can run 'ollama pull llava:7b' later"
+    fi
     
     log_success "Ollama installed and configured"
 }
