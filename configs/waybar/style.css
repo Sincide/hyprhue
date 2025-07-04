@@ -1,18 +1,5 @@
-/* HyprHue Waybar Theme - Base Configuration */
+/* HyprHue Waybar Theme - GTK CSS Compatible */
 /* Colors will be dynamically replaced by the theming system */
-
-:root {
-    --bg-primary: #1e1e2e;
-    --bg-secondary: #313244;
-    --bg-tertiary: #45475a;
-    --fg-primary: #cdd6f4;
-    --fg-secondary: #bac2de;
-    --accent-primary: #89b4fa;
-    --accent-secondary: #74c7ec;
-    --warning: #f9e2af;
-    --critical: #f38ba8;
-    --success: #a6e3a1;
-}
 
 * {
     font-family: 'JetBrains Mono', 'Font Awesome 6 Free', monospace;
@@ -24,8 +11,8 @@
 
 window#waybar {
     background-color: rgba(30, 30, 46, 0.8);
-    border-bottom: 2px solid var(--accent-primary);
-    color: var(--fg-primary);
+    border-bottom: 2px solid #89b4fa;
+    color: #cdd6f4;
     transition: background-color 0.3s ease;
 }
 
@@ -36,33 +23,33 @@ button {
 }
 
 button:hover {
-    background: var(--bg-secondary);
-    box-shadow: inset 0 -3px var(--accent-primary);
+    background: #313244;
+    box-shadow: inset 0 -3px #89b4fa;
 }
 
 #workspaces button {
     padding: 0 8px;
     background-color: transparent;
-    color: var(--fg-secondary);
+    color: #bac2de;
     border-radius: 4px;
     margin: 2px;
     transition: all 0.3s ease;
 }
 
 #workspaces button:hover {
-    background: var(--bg-secondary);
-    color: var(--fg-primary);
+    background: #313244;
+    color: #cdd6f4;
 }
 
 #workspaces button.active {
-    background: var(--accent-primary);
-    color: var(--bg-primary);
+    background: #89b4fa;
+    color: #1e1e2e;
     font-weight: bold;
 }
 
 #workspaces button.urgent {
-    background: var(--critical);
-    color: var(--bg-primary);
+    background: #f38ba8;
+    color: #1e1e2e;
     animation: blink 1s linear infinite;
 }
 
@@ -72,41 +59,41 @@ button:hover {
 }
 
 #mode {
-    background-color: var(--warning);
-    color: var(--bg-primary);
+    background-color: #f9e2af;
+    color: #1e1e2e;
     padding: 0 10px;
     font-weight: bold;
 }
 
 #scratchpad {
-    background: var(--bg-secondary);
-    color: var(--fg-primary);
+    background: #313244;
+    color: #cdd6f4;
     padding: 0 10px;
     border-radius: 4px;
     margin: 2px;
 }
 
 #window {
-    color: var(--fg-primary);
+    color: #cdd6f4;
     font-weight: bold;
     padding: 0 10px;
 }
 
 #idle_inhibitor {
-    background-color: var(--bg-secondary);
-    color: var(--fg-primary);
+    background-color: #313244;
+    color: #cdd6f4;
     padding: 0 10px;
     border-radius: 4px;
     margin: 2px;
 }
 
 #idle_inhibitor.activated {
-    background-color: var(--accent-secondary);
-    color: var(--bg-primary);
+    background-color: #74c7ec;
+    color: #1e1e2e;
 }
 
 #tray {
-    background-color: var(--bg-secondary);
+    background-color: #313244;
     border-radius: 4px;
     padding: 0 5px;
     margin: 2px;
@@ -117,13 +104,13 @@ button:hover {
 }
 
 #tray > .needs-attention {
-    background-color: var(--warning);
-    color: var(--bg-primary);
+    background-color: #f9e2af;
+    color: #1e1e2e;
 }
 
 #clock {
-    background-color: var(--accent-primary);
-    color: var(--bg-primary);
+    background-color: #89b4fa;
+    color: #1e1e2e;
     padding: 0 10px;
     border-radius: 4px;
     margin: 2px;
@@ -131,21 +118,21 @@ button:hover {
 }
 
 #cpu, #memory, #temperature {
-    background-color: var(--bg-secondary);
-    color: var(--fg-primary);
+    background-color: #313244;
+    color: #cdd6f4;
     padding: 0 10px;
     border-radius: 4px;
     margin: 2px;
 }
 
 #cpu.warning, #memory.warning, #temperature.warning {
-    background-color: var(--warning);
-    color: var(--bg-primary);
+    background-color: #f9e2af;
+    color: #1e1e2e;
 }
 
 #cpu.critical, #memory.critical, #temperature.critical {
-    background-color: var(--critical);
-    color: var(--bg-primary);
+    background-color: #f38ba8;
+    color: #1e1e2e;
     animation: pulse 2s ease-in-out infinite;
 }
 
@@ -155,84 +142,82 @@ button:hover {
 }
 
 #battery {
-    background-color: var(--bg-secondary);
-    color: var(--fg-primary);
+    background-color: #313244;
+    color: #cdd6f4;
     padding: 0 10px;
     border-radius: 4px;
     margin: 2px;
 }
 
 #battery.charging {
-    background-color: var(--success);
-    color: var(--bg-primary);
+    background-color: #a6e3a1;
+    color: #1e1e2e;
 }
 
 #battery.warning:not(.charging) {
-    background-color: var(--warning);
-    color: var(--bg-primary);
+    background-color: #f9e2af;
+    color: #1e1e2e;
 }
 
 #battery.critical:not(.charging) {
-    background-color: var(--critical);
-    color: var(--bg-primary);
+    background-color: #f38ba8;
+    color: #1e1e2e;
     animation: pulse 2s ease-in-out infinite;
 }
 
 #network {
-    background-color: var(--bg-secondary);
-    color: var(--fg-primary);
+    background-color: #313244;
+    color: #cdd6f4;
     padding: 0 10px;
     border-radius: 4px;
     margin: 2px;
 }
 
 #network.disconnected {
-    background-color: var(--critical);
-    color: var(--bg-primary);
+    background-color: #f38ba8;
+    color: #1e1e2e;
 }
 
 #network.wifi {
-    background-color: var(--accent-secondary);
-    color: var(--bg-primary);
+    background-color: #74c7ec;
+    color: #1e1e2e;
 }
 
 #network.ethernet {
-    background-color: var(--success);
-    color: var(--bg-primary);
+    background-color: #a6e3a1;
+    color: #1e1e2e;
 }
 
 #pulseaudio {
-    background-color: var(--bg-secondary);
-    color: var(--fg-primary);
+    background-color: #313244;
+    color: #cdd6f4;
     padding: 0 10px;
     border-radius: 4px;
     margin: 2px;
 }
 
 #pulseaudio.muted {
-    background-color: var(--critical);
-    color: var(--bg-primary);
+    background-color: #f38ba8;
+    color: #1e1e2e;
 }
 
 #pulseaudio.bluetooth {
-    background-color: var(--accent-secondary);
-    color: var(--bg-primary);
+    background-color: #74c7ec;
+    color: #1e1e2e;
 }
 
-/* Responsive design for smaller screens */
+/* Responsive design */
 @media (max-width: 1200px) {
     #temperature, #cpu, #memory {
-        display: none;
+        font-size: 12px;
     }
 }
 
 @media (max-width: 800px) {
     #network, #pulseaudio {
         font-size: 12px;
-        padding: 0 5px;
     }
-    
     #window {
-        max-width: 100px;
+        font-size: 12px;
     }
 } 
