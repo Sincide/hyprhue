@@ -188,32 +188,33 @@ check_hyprland() {
     log_success "Hyprland is installed"
 }
 
-# Install yay if not present
+# Install yay-bin if not present
 install_yay() {
     if command -v yay &> /dev/null; then
         log_debug "yay is already installed"
         return
     fi
     
-    log_info "Installing yay AUR helper..."
+    log_info "Installing yay-bin AUR helper..."
     
     # Create temporary directory
     local temp_dir=$(mktemp -d)
     cd "${temp_dir}"
     
-    # Install git and base-devel if not present
+    # Install git and base-devel if not present (required for AUR operations)
     sudo pacman -S --needed --noconfirm git base-devel
     
-    # Clone and install yay
-    git clone https://aur.archlinux.org/yay.git
-    cd yay
+    # Download and install yay-bin (precompiled binary)
+    log_debug "Downloading yay-bin from AUR..."
+    git clone https://aur.archlinux.org/yay-bin.git
+    cd yay-bin
     makepkg -si --noconfirm
     
     # Clean up
     cd "${USER_HOME}"
     rm -rf "${temp_dir}"
     
-    log_success "yay installed successfully"
+    log_success "yay-bin installed successfully"
 }
 
 # Install system dependencies
@@ -642,9 +643,9 @@ main() {
     
     # Perform installation steps
     check_arch_distro
+    install_yay
     check_nvidia_gpu
     check_hyprland
-    install_yay
     install_dependencies
     install_ollama
     create_directories
