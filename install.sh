@@ -66,6 +66,30 @@ log_debug() {
     fi
 }
 
+# Safe execution function - runs command and continues on failure
+safe_run() {
+    local cmd="$1"
+    local description="$2"
+    local critical="${3:-false}"
+    
+    log_debug "Running: $cmd"
+    
+    if eval "$cmd"; then
+        log_debug "$description completed successfully"
+        return 0
+    else
+        local exit_code=$?
+        if [[ "$critical" == "true" ]]; then
+            log_error "$description failed (exit code: $exit_code)"
+            log_error "This is a critical step - installation cannot continue"
+            exit 1
+        else
+            log_warning "$description failed (exit code: $exit_code) - continuing..."
+            return $exit_code
+        fi
+    fi
+}
+
 # Print header
 print_header() {
     log ""
@@ -173,8 +197,6 @@ check_nvidia_gpu() {
         log_success "No NVIDIA GPU detected"
     fi
 }
-
-
 
 # Install yay-bin if not present
 install_yay() {
@@ -357,11 +379,12 @@ install_ollama() {
     # Wait for Ollama API to be ready
     log_info "Waiting for Ollama API to be ready..."
     retry_count=0
-    while ! curl -s http://localhost:11434/api/tags &> /dev/null; do
+    while ! curl -s --connect-timeout 5 --max-time 10 http://localhost:11434/api/tags &> /dev/null; do
         if [[ $retry_count -gt 60 ]]; then
-            log_error "Ollama API failed to respond after 60 seconds"
-            log_error "Skipping model download - you can run 'ollama pull llava:7b' later"
-            log_success "Ollama installed (API not ready)"
+            log_warning "Ollama API failed to respond after 60 seconds"
+            log_warning "Skipping model download - you can run 'ollama pull llava:7b' later"
+            log_warning "Ollama service is running but API may need more time to initialize"
+            log_success "Ollama installed (API not immediately ready)"
             return
         fi
         sleep 1
@@ -371,8 +394,19 @@ install_ollama() {
     
     # Pull vision-capable model
     log_info "Pulling vision-capable AI model (this may take a while)..."
-    if ! ollama pull llava:7b; then
-        log_warning "Failed to pull llava:7b model - you can run 'ollama pull llava:7b' later"
+    
+    # Try to pull the model with timeout and better error handling
+    if timeout 300 ollama pull llava:7b 2>/dev/null; then
+        log_success "LLaVA 7B model downloaded successfully"
+    else
+        local exit_code=$?
+        if [[ $exit_code -eq 124 ]]; then
+            log_warning "Model download timed out after 5 minutes"
+        else
+            log_warning "Failed to pull llava:7b model (exit code: $exit_code)"
+        fi
+        log_warning "You can download it later with: ollama pull llava:7b"
+        log_warning "The model is ~4GB and may take time to download"
     fi
     
     log_success "Ollama installed and configured"
@@ -655,11 +689,17 @@ main() {
     check_nvidia_gpu
     install_dependencies
     install_ollama
+    log_debug "Ollama installation completed, continuing with directory creation..."
     create_directories
+    log_debug "Directory creation completed, continuing with config installation..."
     install_configs
+    log_debug "Config installation completed, continuing with settings creation..."
     create_settings
+    log_debug "Settings creation completed, continuing with service setup..."
     setup_services
+    log_debug "Service setup completed, continuing with PATH update..."
     update_path
+    log_debug "PATH update completed, continuing with final setup..."
     final_setup
     
     print_summary
