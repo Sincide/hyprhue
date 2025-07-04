@@ -134,14 +134,14 @@ test_hyprland_config() {
     local open_braces=0
     local close_braces=0
     
-    # Count opening braces
-    if grep -q "^[[:space:]]*{" "${BASE_DIR}/${file}" 2>/dev/null; then
-        open_braces=$(grep -c "^[[:space:]]*{" "${BASE_DIR}/${file}" 2>/dev/null || echo "0")
+    # Count opening braces (both standalone and inline like "section {")
+    if grep -q "{" "${BASE_DIR}/${file}" 2>/dev/null; then
+        open_braces=$(grep -o "{" "${BASE_DIR}/${file}" 2>/dev/null | wc -l || echo "0")
     fi
     
-    # Count closing braces
-    if grep -q "^[[:space:]]*}" "${BASE_DIR}/${file}" 2>/dev/null; then
-        close_braces=$(grep -c "^[[:space:]]*}" "${BASE_DIR}/${file}" 2>/dev/null || echo "0")
+    # Count closing braces (both standalone and inline)
+    if grep -q "}" "${BASE_DIR}/${file}" 2>/dev/null; then
+        close_braces=$(grep -o "}" "${BASE_DIR}/${file}" 2>/dev/null | wc -l || echo "0")
     fi
     
     # Ensure we have clean numeric values
