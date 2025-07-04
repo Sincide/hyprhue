@@ -1,0 +1,387 @@
+#!/bin/bash
+
+# HyprHue - Apply Theme
+# This script applies AI-generated themes to various applications
+
+set -euo pipefail
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m'
+
+# Configuration
+CONFIG_DIR="${HOME}/.config"
+CACHE_DIR="${HOME}/.cache/hyprhue"
+HYPRHUE_CONFIG="${CONFIG_DIR}/hyprhue/config.toml"
+BACKUP_DIR="${CACHE_DIR}/backups"
+
+# Logging functions
+log_info() {
+    echo -e "${CYAN}[INFO]${NC} ${1}"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} ${1}"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} ${1}"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} ${1}"
+}
+
+log_debug() {
+    if [[ "${DEBUG:-false}" == "true" ]]; then
+        echo -e "${BLUE}[DEBUG]${NC} ${1}"
+    fi
+}
+
+# Show help
+show_help() {
+    cat << EOF
+HyprHue - Apply Theme
+
+Usage: $0 [OPTIONS] AI_ANALYSIS_FILE
+
+Arguments:
+  AI_ANALYSIS_FILE  JSON file containing AI analysis results
+
+Options:
+  -d, --debug       Enable debug output
+  -n, --no-backup   Skip backup creation
+  -r, --no-reload   Skip application reloading
+  -h, --help        Show this help message
+
+Examples:
+  $0 analysis.json
+  $0 analysis.json --no-backup
+  $0 analysis.json --debug
+EOF
+}
+
+# Parse command line arguments
+parse_args() {
+    AI_FILE=""
+    DEBUG=false
+    NO_BACKUP=false
+    NO_RELOAD=false
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -d|--debug)
+                DEBUG=true
+                shift
+                ;;
+            -n|--no-backup)
+                NO_BACKUP=true
+                shift
+                ;;
+            -r|--no-reload)
+                NO_RELOAD=true
+                shift
+                ;;
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -*)
+                log_error "Unknown option: $1"
+                show_help
+                exit 1
+                ;;
+            *)
+                if [[ -z "${AI_FILE}" ]]; then
+                    AI_FILE="$1"
+                else
+                    log_error "Unexpected argument: $1"
+                    show_help
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    if [[ -z "${AI_FILE}" ]]; then
+        log_error "No AI analysis file specified"
+        show_help
+        exit 1
+    fi
+}
+
+# Load AI analysis
+load_analysis() {
+    local ai_file="$1"
+    
+    log_info "Loading AI analysis from ${ai_file}..."
+    
+    if [[ ! -f "${ai_file}" ]]; then
+        log_error "AI analysis file not found: ${ai_file}"
+        exit 1
+    fi
+    
+    # Validate JSON
+    if ! jq . "${ai_file}" &>/dev/null; then
+        log_error "Invalid JSON in AI analysis file"
+        exit 1
+    fi
+    
+    # Extract colors
+    BG_PRIMARY=$(jq -r '.palette.background // .palette.primary' "${ai_file}")
+    BG_SECONDARY=$(jq -r '.palette.secondary // .palette.primary' "${ai_file}")
+    FG_PRIMARY=$(jq -r '.palette.foreground // "#ffffff"' "${ai_file}")
+    ACCENT_PRIMARY=$(jq -r '.palette.accent // .palette.primary' "${ai_file}")
+    ACCENT_SECONDARY=$(jq -r '.palette.accent // .palette.secondary' "${ai_file}")
+    WARNING=$(jq -r '.palette.warning // "#ffaa00"' "${ai_file}")
+    CRITICAL=$(jq -r '.palette.error // "#ff0000"' "${ai_file}")
+    SUCCESS=$(jq -r '.palette.success // "#00ff00"' "${ai_file}")
+    
+    log_success "AI analysis loaded successfully"
+    log_debug "Colors: BG=${BG_PRIMARY}, FG=${FG_PRIMARY}, ACCENT=${ACCENT_PRIMARY}"
+}
+
+# Create backups
+create_backups() {
+    if [[ "${NO_BACKUP}" == "true" ]]; then
+        log_info "Skipping backup creation"
+        return
+    fi
+    
+    log_info "Creating configuration backups..."
+    
+    local timestamp=$(date +%Y%m%d_%H%M%S)
+    local backup_subdir="${BACKUP_DIR}/${timestamp}"
+    
+    mkdir -p "${backup_subdir}"
+    
+    # Backup configuration files
+    local configs=(
+        "${CONFIG_DIR}/hypr/conf/theme.conf"
+        "${CONFIG_DIR}/waybar/style.css"
+        "${CONFIG_DIR}/kitty/kitty.conf"
+        "${CONFIG_DIR}/alacritty/alacritty.toml"
+        "${CONFIG_DIR}/rofi/config.rasi"
+        "${CONFIG_DIR}/dunst/dunstrc"
+    )
+    
+    for config in "${configs[@]}"; do
+        if [[ -f "${config}" ]]; then
+            local backup_path="${backup_subdir}/$(basename "${config}")"
+            cp "${config}" "${backup_path}"
+            log_debug "Backed up ${config} to ${backup_path}"
+        fi
+    done
+    
+    log_success "Backups created in ${backup_subdir}"
+}
+
+# Apply theme to Hyprland
+apply_hyprland_theme() {
+    log_info "Applying theme to Hyprland..."
+    
+    local theme_file="${CONFIG_DIR}/hypr/conf/theme.conf"
+    
+    # Convert colors to Hyprland format
+    local bg_primary_rgb=$(echo "${BG_PRIMARY}" | sed 's/#//')
+    local accent_primary_rgb=$(echo "${ACCENT_PRIMARY}" | sed 's/#//')
+    local accent_secondary_rgb=$(echo "${ACCENT_SECONDARY}" | sed 's/#//')
+    
+    cat > "${theme_file}" << EOF
+# HyprHue Theme Configuration
+# This file is automatically generated by the HyprHue AI theming system
+
+# Theme colors (generated from AI analysis)
+\$bg_primary = rgb(${bg_primary_rgb})
+\$bg_secondary = rgb($(echo "${BG_SECONDARY}" | sed 's/#//'))
+\$fg_primary = rgb($(echo "${FG_PRIMARY}" | sed 's/#//'))
+\$accent_primary = rgb(${accent_primary_rgb})
+\$accent_secondary = rgb(${accent_secondary_rgb})
+\$warning = rgb($(echo "${WARNING}" | sed 's/#//'))
+\$critical = rgb($(echo "${CRITICAL}" | sed 's/#//'))
+\$success = rgb($(echo "${SUCCESS}" | sed 's/#//'))
+
+# Override general colors with theme
+general {
+    col.active_border = \$accent_primary \$accent_secondary 45deg
+    col.inactive_border = rgba(585b7055)
+}
+
+# Override decoration colors with theme
+decoration {
+    col.shadow = rgba(1a1a1aee)
+    col.shadow_inactive = rgba(1a1a1a00)
+}
+
+# Group colors
+group {
+    col.border_active = \$accent_primary
+    col.border_inactive = rgba(585b7055)
+    col.border_locked_active = \$warning
+    col.border_locked_inactive = rgba(585b7055)
+    
+    groupbar {
+        col.active = \$accent_primary
+        col.inactive = rgba(585b7055)
+        col.locked_active = \$warning
+        col.locked_inactive = rgba(585b7055)
+    }
+}
+
+# Misc colors
+misc {
+    col.splash = \$accent_primary
+    background_color = \$bg_primary
+    disable_hyprland_logo = true
+    disable_splash_rendering = false
+    force_default_wallpaper = 0
+}
+EOF
+    
+    log_success "Hyprland theme applied"
+}
+
+# Apply theme to Waybar
+apply_waybar_theme() {
+    log_info "Applying theme to Waybar..."
+    
+    local waybar_css="${CONFIG_DIR}/waybar/style.css"
+    
+    # Read the original CSS and replace color variables
+    if [[ -f "${waybar_css}" ]]; then
+        sed -i "s/--bg-primary: #[0-9a-fA-F]\{6\};/--bg-primary: ${BG_PRIMARY};/" "${waybar_css}"
+        sed -i "s/--bg-secondary: #[0-9a-fA-F]\{6\};/--bg-secondary: ${BG_SECONDARY};/" "${waybar_css}"
+        sed -i "s/--fg-primary: #[0-9a-fA-F]\{6\};/--fg-primary: ${FG_PRIMARY};/" "${waybar_css}"
+        sed -i "s/--accent-primary: #[0-9a-fA-F]\{6\};/--accent-primary: ${ACCENT_PRIMARY};/" "${waybar_css}"
+        sed -i "s/--accent-secondary: #[0-9a-fA-F]\{6\};/--accent-secondary: ${ACCENT_SECONDARY};/" "${waybar_css}"
+        sed -i "s/--warning: #[0-9a-fA-F]\{6\};/--warning: ${WARNING};/" "${waybar_css}"
+        sed -i "s/--critical: #[0-9a-fA-F]\{6\};/--critical: ${CRITICAL};/" "${waybar_css}"
+        sed -i "s/--success: #[0-9a-fA-F]\{6\};/--success: ${SUCCESS};/" "${waybar_css}"
+    fi
+    
+    log_success "Waybar theme applied"
+}
+
+# Apply theme to Kitty
+apply_kitty_theme() {
+    log_info "Applying theme to Kitty..."
+    
+    local kitty_config="${CONFIG_DIR}/kitty/kitty.conf"
+    
+    if [[ -f "${kitty_config}" ]]; then
+        # Update colors in kitty config
+        sed -i "s/^background #[0-9a-fA-F]\{6\}/background ${BG_PRIMARY}/" "${kitty_config}"
+        sed -i "s/^foreground #[0-9a-fA-F]\{6\}/foreground ${FG_PRIMARY}/" "${kitty_config}"
+        sed -i "s/^cursor #[0-9a-fA-F]\{6\}/cursor ${ACCENT_PRIMARY}/" "${kitty_config}"
+        sed -i "s/^selection_background #[0-9a-fA-F]\{6\}/selection_background ${ACCENT_SECONDARY}/" "${kitty_config}"
+        sed -i "s/^active_tab_background #[0-9a-fA-F]\{6\}/active_tab_background ${ACCENT_PRIMARY}/" "${kitty_config}"
+        sed -i "s/^inactive_tab_background #[0-9a-fA-F]\{6\}/inactive_tab_background ${BG_SECONDARY}/" "${kitty_config}"
+    fi
+    
+    log_success "Kitty theme applied"
+}
+
+# Apply theme to Rofi
+apply_rofi_theme() {
+    log_info "Applying theme to Rofi..."
+    
+    local rofi_config="${CONFIG_DIR}/rofi/config.rasi"
+    
+    if [[ -f "${rofi_config}" ]]; then
+        # Update colors in rofi config
+        sed -i "s/bg-primary: #[0-9a-fA-F]\{6\};/bg-primary: ${BG_PRIMARY};/" "${rofi_config}"
+        sed -i "s/bg-secondary: #[0-9a-fA-F]\{6\};/bg-secondary: ${BG_SECONDARY};/" "${rofi_config}"
+        sed -i "s/fg-primary: #[0-9a-fA-F]\{6\};/fg-primary: ${FG_PRIMARY};/" "${rofi_config}"
+        sed -i "s/accent-primary: #[0-9a-fA-F]\{6\};/accent-primary: ${ACCENT_PRIMARY};/" "${rofi_config}"
+        sed -i "s/accent-secondary: #[0-9a-fA-F]\{6\};/accent-secondary: ${ACCENT_SECONDARY};/" "${rofi_config}"
+    fi
+    
+    log_success "Rofi theme applied"
+}
+
+# Apply theme to Dunst
+apply_dunst_theme() {
+    log_info "Applying theme to Dunst..."
+    
+    local dunst_config="${CONFIG_DIR}/dunst/dunstrc"
+    
+    if [[ -f "${dunst_config}" ]]; then
+        # Update colors in dunst config
+        sed -i "s/frame_color = \"#[0-9a-fA-F]\{6\}\"/frame_color = \"${ACCENT_PRIMARY}\"/" "${dunst_config}"
+        sed -i "/\[urgency_low\]/,/\[/ s/background = \"#[0-9a-fA-F]\{6\}\"/background = \"${BG_PRIMARY}\"/" "${dunst_config}"
+        sed -i "/\[urgency_low\]/,/\[/ s/foreground = \"#[0-9a-fA-F]\{6\}\"/foreground = \"${FG_PRIMARY}\"/" "${dunst_config}"
+        sed -i "/\[urgency_normal\]/,/\[/ s/background = \"#[0-9a-fA-F]\{6\}\"/background = \"${BG_PRIMARY}\"/" "${dunst_config}"
+        sed -i "/\[urgency_normal\]/,/\[/ s/foreground = \"#[0-9a-fA-F]\{6\}\"/foreground = \"${FG_PRIMARY}\"/" "${dunst_config}"
+    fi
+    
+    log_success "Dunst theme applied"
+}
+
+# Reload applications
+reload_applications() {
+    if [[ "${NO_RELOAD}" == "true" ]]; then
+        log_info "Skipping application reloading"
+        return
+    fi
+    
+    log_info "Reloading applications..."
+    
+    # Reload Hyprland
+    if command -v hyprctl &>/dev/null; then
+        hyprctl reload &>/dev/null || log_warning "Failed to reload Hyprland"
+    fi
+    
+    # Reload Waybar
+    if pgrep waybar &>/dev/null; then
+        pkill waybar && waybar &
+        disown
+        log_debug "Waybar reloaded"
+    fi
+    
+    # Reload Dunst
+    if pgrep dunst &>/dev/null; then
+        pkill dunst && dunst &
+        disown
+        log_debug "Dunst reloaded"
+    fi
+    
+    log_success "Applications reloaded"
+}
+
+# Main function
+main() {
+    parse_args "$@"
+    
+    log_info "Starting theme application..."
+    log_debug "AI file: ${AI_FILE}"
+    log_debug "Debug: ${DEBUG}"
+    log_debug "No backup: ${NO_BACKUP}"
+    log_debug "No reload: ${NO_RELOAD}"
+    
+    # Load AI analysis
+    load_analysis "${AI_FILE}"
+    
+    # Create backups
+    create_backups
+    
+    # Apply themes to applications
+    apply_hyprland_theme
+    apply_waybar_theme
+    apply_kitty_theme
+    apply_rofi_theme
+    apply_dunst_theme
+    
+    # Reload applications
+    reload_applications
+    
+    log_success "Theme application completed successfully!"
+}
+
+# Run main function
+main "$@" 

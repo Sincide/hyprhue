@@ -1,0 +1,154 @@
+# HyprHue Configuration File
+# This file controls the behavior of the HyprHue AI theming system
+
+[ai]
+# Enable/disable AI theming functionality
+enabled = true
+
+# AI model to use for wallpaper analysis
+model = "llava:7b"
+
+# Automatic theming mode (applies themes without confirmation)
+auto_mode = false
+
+# AI model temperature (0.0 = deterministic, 1.0 = creative)
+temperature = 0.7
+
+# Timeout for AI requests in seconds
+timeout = 30
+
+[apps]
+# Enable theming for specific applications
+waybar = true
+kitty = true
+alacritty = true
+rofi = true
+dunst = true
+gtk = true
+qt = true
+hyprland = true
+
+[behavior]
+# Automatically reload applications after theme changes
+auto_reload = true
+
+# Create backups before applying themes
+backup_configs = true
+
+# Notification level: "silent", "normal", "verbose"
+notification_level = "normal"
+
+# Enable debug mode for troubleshooting
+debug_mode = false
+
+# Apply theme to new wallpaper automatically (requires auto_mode)
+auto_apply_on_wallpaper_change = false
+
+[paths]
+# Directory containing wallpapers
+wallpaper_dir = "~/Pictures/Wallpapers"
+
+# Directory for screenshots
+screenshot_dir = "~/Pictures/Screenshots"
+
+# Directory for configuration backups
+backup_dir = "~/.cache/hyprhue/backups"
+
+# Directory for generated themes
+theme_dir = "~/.config/hyprhue/themes"
+
+# Cache directory for temporary files
+cache_dir = "~/.cache/hyprhue"
+
+[colors]
+# Preserve contrast ratios when generating themes
+preserve_contrast = true
+
+# Minimum contrast ratio for text readability (WCAG AA = 4.5)
+min_contrast_ratio = 4.5
+
+# Boost saturation of generated colors (1.0 = no change)
+saturation_boost = 1.1
+
+# Adjust brightness of generated colors (-1.0 to 1.0)
+brightness_adjustment = 0.0
+
+# Prefer warm or cool tones ("neutral", "warm", "cool")
+color_temperature_preference = "neutral"
+
+[ollama]
+# Ollama server host
+host = "http://localhost:11434"
+
+# Default model for AI analysis
+model = "llava:7b"
+
+# Request timeout in seconds
+timeout = 30
+
+# Maximum tokens for AI response
+max_tokens = 1000
+
+# Use GPU acceleration if available
+gpu_acceleration = true
+
+[keybindings]
+# Enable HyprHue keybindings in Hyprland
+enable_keybinds = true
+
+# Main theming hotkey (Super+T)
+theme_hotkey = "SUPER_T"
+
+# Theme selector hotkey (Super+Shift+T)
+selector_hotkey = "SUPER_SHIFT_T"
+
+# Color picker hotkey (Super+Ctrl+T)
+picker_hotkey = "SUPER_CTRL_T"
+
+[advanced]
+# Use experimental features (may be unstable)
+experimental_features = false
+
+# Generate additional color variants
+generate_variants = true
+
+# Number of color variants to generate
+variant_count = 3
+
+# Use machine learning color harmonies
+ml_color_harmonies = true
+
+# Cache AI results to speed up repeated analysis
+cache_ai_results = true
+
+# Cache duration in hours
+cache_duration = 24
+
+[logging]
+# Log level: "error", "warn", "info", "debug"
+level = "info"
+
+# Log to file
+log_to_file = true
+
+# Log file path
+log_file = "~/.cache/hyprhue/hyprhue.log"
+
+# Maximum log file size in MB
+max_log_size = 10
+
+# Number of log files to keep
+log_rotation_count = 5
+
+[performance]
+# Maximum number of concurrent AI requests
+max_concurrent_requests = 1
+
+# Enable caching for better performance
+enable_caching = true
+
+# Optimize image processing for speed
+fast_image_processing = false
+
+# Skip non-essential applications for faster theming
+skip_optional_apps = false 

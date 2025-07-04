@@ -1,0 +1,74 @@
+# Logs and debugging
+*.log
+debug.log
+install.log
+theme.log
+
+# Temporary files
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.backup
+*.bak
+*.orig
+backup/
+backups/
+
+# Runtime generated files
+*.pid
+*.lock
+.running
+.cache/
+
+# User-specific config overrides
+config.local.toml
+user-*.toml
+
+# Test files and outputs
+test_*
+*.test
+test/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Arch package files
+*.pkg.tar.xz
+*.pkg.tar.zst
+
+# Ollama model cache (if stored locally)
+models/
+*.gguf
+
+# Theme output cache
+theme_cache/
+generated_themes/
+
+# Installation artifacts
+.installed
+.setup_complete
+
+# Personal assets (users may add their own)
+assets/personal/
+wallpapers/personal/
+
+# Runtime state
+.state
+.status 

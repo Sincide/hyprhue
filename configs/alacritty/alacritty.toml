@@ -1,0 +1,196 @@
+# HyprHue Alacritty Configuration - Base Theme
+# Colors will be dynamically replaced by the theming system
+
+[window]
+title = "Alacritty"
+class = { instance = "Alacritty", general = "Alacritty" }
+decorations = "full"
+opacity = 0.9
+blur = true
+startup_mode = "Windowed"
+dynamic_title = true
+dynamic_padding = false
+
+[window.dimensions]
+columns = 100
+lines = 30
+
+[window.position]
+x = 0
+y = 0
+
+[window.padding]
+x = 10
+y = 10
+
+[scrolling]
+history = 10000
+multiplier = 3
+
+[font]
+size = 12.0
+
+[font.normal]
+family = "JetBrains Mono"
+style = "Regular"
+
+[font.bold]
+family = "JetBrains Mono"
+style = "Bold"
+
+[font.italic]
+family = "JetBrains Mono"
+style = "Italic"
+
+[font.bold_italic]
+family = "JetBrains Mono"
+style = "Bold Italic"
+
+[font.offset]
+x = 0
+y = 0
+
+[font.glyph_offset]
+x = 0
+y = 0
+
+[colors]
+draw_bold_text_with_bright_colors = true
+transparent_background_colors = false
+
+[colors.primary]
+background = "#1e1e2e"
+foreground = "#cdd6f4"
+dim_foreground = "#bac2de"
+bright_foreground = "#cdd6f4"
+
+[colors.cursor]
+text = "#1e1e2e"
+cursor = "#f5e0dc"
+
+[colors.vi_mode_cursor]
+text = "#1e1e2e"
+cursor = "#b4befe"
+
+[colors.search.matches]
+foreground = "#1e1e2e"
+background = "#a6adc8"
+
+[colors.search.focused_match]
+foreground = "#1e1e2e"
+background = "#a6e3a1"
+
+[colors.footer_bar]
+foreground = "#1e1e2e"
+background = "#a6adc8"
+
+[colors.hints.start]
+foreground = "#1e1e2e"
+background = "#f9e2af"
+
+[colors.hints.end]
+foreground = "#1e1e2e"
+background = "#a6adc8"
+
+[colors.selection]
+text = "#1e1e2e"
+background = "#f5e0dc"
+
+[colors.normal]
+black = "#45475a"
+red = "#f38ba8"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+blue = "#89b4fa"
+magenta = "#f5c2e7"
+cyan = "#94e2d5"
+white = "#bac2de"
+
+[colors.bright]
+black = "#585b70"
+red = "#f38ba8"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+blue = "#89b4fa"
+magenta = "#f5c2e7"
+cyan = "#94e2d5"
+white = "#a6adc8"
+
+[colors.dim]
+black = "#45475a"
+red = "#f38ba8"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+blue = "#89b4fa"
+magenta = "#f5c2e7"
+cyan = "#94e2d5"
+white = "#bac2de"
+
+[bell]
+animation = "EaseOutExpo"
+duration = 0
+color = "#f38ba8"
+command = "None"
+
+[selection]
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+save_to_clipboard = false
+
+[cursor]
+style = { shape = "Block", blinking = "Off" }
+vi_mode_style = { shape = "Block", blinking = "Off" }
+blink_interval = 750
+blink_timeout = 5
+unfocused_hollow = true
+thickness = 0.15
+
+[terminal]
+osc52 = "OnlyCopy"
+
+[mouse]
+hide_when_typing = false
+bindings = [
+  { mouse = "Middle", action = "PasteSelection" },
+  { mouse = "Right", action = "ExpandSelection" },
+]
+
+[hints]
+alphabet = "jfkdls;ahgurieowpq"
+
+[[hints.enabled]]
+regex = "(ipfs:|ipns:|magnet:|mailto:|gemini:|gopher:|https:|http:|news:|file:|git:|ssh:|ftp:)[^\\u0000-\\u001F\\u007F-\\u009F<>\"\\s{-}\\^⟨⟩`]+"
+command = "xdg-open"
+post_processing = true
+mouse = { enabled = true, mods = "None" }
+binding = { key = "U", mods = "Control|Shift" }
+
+[keyboard]
+bindings = [
+  { key = "V", mods = "Control|Shift", action = "Paste" },
+  { key = "C", mods = "Control|Shift", action = "Copy" },
+  { key = "Insert", mods = "Shift", action = "PasteSelection" },
+  { key = "Key0", mods = "Control", action = "ResetFontSize" },
+  { key = "Equals", mods = "Control", action = "IncreaseFontSize" },
+  { key = "Plus", mods = "Control", action = "IncreaseFontSize" },
+  { key = "NumpadAdd", mods = "Control", action = "IncreaseFontSize" },
+  { key = "Minus", mods = "Control", action = "DecreaseFontSize" },
+  { key = "NumpadSubtract", mods = "Control", action = "DecreaseFontSize" },
+  { key = "Return", mods = "Alt", action = "ToggleFullscreen" },
+  { key = "Paste", action = "Paste" },
+  { key = "Copy", action = "Copy" },
+  { key = "L", mods = "Control", action = "ClearLogNotice" },
+  { key = "L", mods = "Control", chars = "\u000c" },
+  { key = "PageUp", mods = "Shift", action = "ScrollPageUp" },
+  { key = "PageDown", mods = "Shift", action = "ScrollPageDown" },
+  { key = "Home", mods = "Shift", action = "ScrollToTop" },
+  { key = "End", mods = "Shift", action = "ScrollToBottom" },
+]
+
+[debug]
+render_timer = false
+persistent_logging = false
+log_level = "Warn"
+renderer = "None"
+print_events = false
+highlight_damage = false
+prefer_egl = false 

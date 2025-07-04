@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# HyprHue Daemon
+# Background service for HyprHue theming system
+
+set -euo pipefail
+
+# Configuration
+CONFIG_DIR="${HOME}/.config/hyprhue"
+CACHE_DIR="${HOME}/.cache/hyprhue"
+LOG_FILE="${CACHE_DIR}/daemon.log"
+PID_FILE="${CACHE_DIR}/daemon.pid"
+
+# Logging function
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "${LOG_FILE}"
+}
+
+# Check if already running
+check_running() {
+    if [[ -f "${PID_FILE}" ]]; then
+        local pid=$(cat "${PID_FILE}")
+        if kill -0 "${pid}" 2>/dev/null; then
+            log "Daemon already running with PID ${pid}"
+            exit 1
+        else
+            rm -f "${PID_FILE}"
+        fi
+    fi
+}
+
+# Cleanup function
+cleanup() {
+    log "Daemon stopping"
+    rm -f "${PID_FILE}"
+    exit 0
+}
+
+# Main daemon function
+main() {
+    # Create directories
+    mkdir -p "${CONFIG_DIR}" "${CACHE_DIR}"
+    
+    # Check if already running
+    check_running
+    
+    # Write PID file
+    echo $$ > "${PID_FILE}"
+    
+    # Set up signal handlers
+    trap cleanup SIGTERM SIGINT
+    
+    log "HyprHue daemon starting"
+    
+    # Main daemon loop
+    while true; do
+        # Check for configuration changes
+        if [[ -f "${CONFIG_DIR}/config.toml" ]]; then
+            # Add future daemon functionality here
+            # - Watch for wallpaper changes
+            # - Auto-apply themes
+            # - Monitor system events
+            :
+        fi
+        
+        # Sleep for 5 seconds
+        sleep 5
+    done
+}
+
+# Run main function
+main "$@" 

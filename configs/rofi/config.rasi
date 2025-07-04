@@ -1,0 +1,217 @@
+/* HyprHue Rofi Configuration - Base Theme */
+/* Colors will be dynamically replaced by the theming system */
+
+* {
+    bg-primary: #1e1e2e;
+    bg-secondary: #313244;
+    bg-tertiary: #45475a;
+    fg-primary: #cdd6f4;
+    fg-secondary: #bac2de;
+    accent-primary: #89b4fa;
+    accent-secondary: #74c7ec;
+    warning: #f9e2af;
+    critical: #f38ba8;
+    success: #a6e3a1;
+    
+    background-color: transparent;
+    text-color: @fg-primary;
+    
+    margin: 0;
+    padding: 0;
+    spacing: 0;
+}
+
+window {
+    background-color: @bg-primary;
+    border: 2px;
+    border-color: @accent-primary;
+    border-radius: 10px;
+    width: 600px;
+    location: center;
+    anchor: center;
+    transparency: "real";
+}
+
+mainbox {
+    background-color: transparent;
+    padding: 20px;
+    spacing: 20px;
+}
+
+inputbar {
+    background-color: @bg-secondary;
+    border: 0px;
+    border-radius: 8px;
+    padding: 12px 16px;
+    spacing: 10px;
+    text-color: @fg-primary;
+    children: [ "prompt", "entry" ];
+}
+
+prompt {
+    background-color: transparent;
+    text-color: @accent-primary;
+    font: "JetBrains Mono Bold 12";
+}
+
+entry {
+    background-color: transparent;
+    text-color: @fg-primary;
+    placeholder: "Search...";
+    placeholder-color: @fg-secondary;
+    font: "JetBrains Mono 12";
+}
+
+message {
+    background-color: @bg-secondary;
+    border: 0px;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 0px;
+}
+
+textbox {
+    background-color: transparent;
+    text-color: @fg-primary;
+    font: "JetBrains Mono 11";
+}
+
+listview {
+    background-color: transparent;
+    columns: 1;
+    lines: 10;
+    spacing: 4px;
+    cycle: true;
+    dynamic: true;
+    layout: vertical;
+    reverse: false;
+    fixed-height: true;
+    fixed-columns: true;
+    scrollbar: false;
+    padding: 8px 0px;
+}
+
+element {
+    background-color: transparent;
+    text-color: @fg-primary;
+    orientation: horizontal;
+    border-radius: 6px;
+    padding: 10px 12px;
+    spacing: 12px;
+    margin: 2px 0px;
+}
+
+element normal.normal {
+    background-color: transparent;
+    text-color: @fg-primary;
+}
+
+element normal.urgent {
+    background-color: @critical;
+    text-color: @bg-primary;
+}
+
+element normal.active {
+    background-color: @accent-secondary;
+    text-color: @bg-primary;
+}
+
+element selected.normal {
+    background-color: @accent-primary;
+    text-color: @bg-primary;
+}
+
+element selected.urgent {
+    background-color: @critical;
+    text-color: @bg-primary;
+}
+
+element selected.active {
+    background-color: @accent-secondary;
+    text-color: @bg-primary;
+}
+
+element alternate.normal {
+    background-color: transparent;
+    text-color: @fg-primary;
+}
+
+element alternate.urgent {
+    background-color: @critical;
+    text-color: @bg-primary;
+}
+
+element alternate.active {
+    background-color: @accent-secondary;
+    text-color: @bg-primary;
+}
+
+element-icon {
+    background-color: transparent;
+    size: 24px;
+    cursor: inherit;
+}
+
+element-text {
+    background-color: transparent;
+    text-color: inherit;
+    cursor: inherit;
+    vertical-align: 0.5;
+    horizontal-align: 0.0;
+    font: "JetBrains Mono 11";
+}
+
+scrollbar {
+    background-color: @bg-secondary;
+    handle-color: @accent-primary;
+    border-radius: 8px;
+    margin: 0px 0px 0px 8px;
+}
+
+sidebar {
+    background-color: @bg-secondary;
+    border: 0px;
+    border-radius: 8px;
+    margin: 10px 0px 0px 0px;
+    padding: 10px;
+    spacing: 10px;
+}
+
+button {
+    background-color: @bg-tertiary;
+    text-color: @fg-primary;
+    border: 0px;
+    border-radius: 6px;
+    padding: 8px;
+    font: "JetBrains Mono 10";
+    cursor: pointer;
+}
+
+button selected {
+    background-color: @accent-primary;
+    text-color: @bg-primary;
+}
+
+inputbar {
+    children: [ "prompt", "entry", "case-indicator" ];
+}
+
+case-indicator {
+    background-color: transparent;
+    text-color: @fg-secondary;
+    spacing: 0;
+}
+
+mode-switcher {
+    background-color: @bg-secondary;
+    border: 0px;
+    border-radius: 8px;
+    padding: 8px;
+    spacing: 8px;
+}
+
+/* Custom theme for different modes */
+@import "~/.config/rofi/themes/mode-drun.rasi"
+@import "~/.config/rofi/themes/mode-run.rasi"
+@import "~/.config/rofi/themes/mode-window.rasi"
+@import "~/.config/rofi/themes/mode-ssh.rasi" 

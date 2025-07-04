@@ -1,0 +1,233 @@
+#!/bin/bash
+
+# HyprHue - Theme from Wallpaper
+# Main CLI command for applying themes from wallpapers using AI
+
+set -euo pipefail
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m'
+
+# Configuration
+CONFIG_DIR="${HOME}/.config/hyprhue"
+CACHE_DIR="${HOME}/.cache/hyprhue"
+CONFIG_FILE="${CONFIG_DIR}/config.toml"
+WALLPAPER_DIR="${HOME}/Pictures/Wallpapers"
+SAMPLE_WALLPAPERS_DIR="${WALLPAPER_DIR}/samples"
+
+# Logging functions
+log_info() {
+    echo -e "${CYAN}[INFO]${NC} ${1}"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} ${1}"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} ${1}"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} ${1}"
+}
+
+# Show help
+show_help() {
+    echo "HyprHue - Theme from Wallpaper"
+    echo ""
+    echo "Usage: $0 [WALLPAPER] [PROMPT]"
+    echo ""
+    echo "Arguments:"
+    echo "  WALLPAPER    Path to wallpaper image or 'sample' for sample wallpapers"
+    echo "  PROMPT       Optional natural language prompt for theming style"
+    echo ""
+    echo "Examples:"
+    echo "  $0 ~/Pictures/wallpaper.jpg"
+    echo "  $0 ~/Pictures/wallpaper.jpg \"make it warm and cozy\""
+    echo "  $0 sample \"cyberpunk aesthetic\""
+    echo "  $0 sample"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help   Show this help message"
+}
+
+# Check if config file exists
+check_config() {
+    if [[ ! -f "${CONFIG_FILE}" ]]; then
+        log_error "HyprHue configuration file not found: ${CONFIG_FILE}"
+        log_error "Please run the installer first."
+        exit 1
+    fi
+}
+
+# Get random sample wallpaper
+get_sample_wallpaper() {
+    if [[ ! -d "${SAMPLE_WALLPAPERS_DIR}" ]]; then
+        # Fallback to main wallpaper directory
+        if [[ ! -d "${WALLPAPER_DIR}" ]]; then
+            log_error "Wallpaper directory not found: ${WALLPAPER_DIR}"
+            exit 1
+        fi
+        SAMPLE_WALLPAPERS_DIR="${WALLPAPER_DIR}"
+    fi
+    
+    # Find image files
+    local images=()
+    while IFS= read -r -d '' file; do
+        images+=("$file")
+    done < <(find "${SAMPLE_WALLPAPERS_DIR}" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) -print0 2>/dev/null)
+    
+    if [[ ${#images[@]} -eq 0 ]]; then
+        log_error "No image files found in ${SAMPLE_WALLPAPERS_DIR}"
+        exit 1
+    fi
+    
+    # Select random image
+    local random_index=$((RANDOM % ${#images[@]}))
+    echo "${images[random_index]}"
+}
+
+# Validate wallpaper file
+validate_wallpaper() {
+    local wallpaper="$1"
+    
+    if [[ ! -f "${wallpaper}" ]]; then
+        log_error "Wallpaper file not found: ${wallpaper}"
+        exit 1
+    fi
+    
+    # Check if it's an image file
+    if ! file "${wallpaper}" | grep -qE "(JPEG|PNG|WebP|GIF)" &>/dev/null; then
+        log_error "File is not a valid image: ${wallpaper}"
+        exit 1
+    fi
+    
+    log_info "Using wallpaper: ${wallpaper}"
+}
+
+# Call AI analysis script
+analyze_wallpaper() {
+    local wallpaper="$1"
+    local prompt="${2:-}"
+    
+    log_info "Analyzing wallpaper with AI..."
+    
+    # Create cache directory if it doesn't exist
+    mkdir -p "${CACHE_DIR}"
+    
+    # Call AI analysis script
+    local ai_result="${CACHE_DIR}/ai_analysis.json"
+    
+    if [[ -n "${prompt}" ]]; then
+        hyprhue-ai-analyze "${wallpaper}" --prompt "${prompt}" --output "${ai_result}"
+    else
+        hyprhue-ai-analyze "${wallpaper}" --output "${ai_result}"
+    fi
+    
+    if [[ ! -f "${ai_result}" ]]; then
+        log_error "AI analysis failed"
+        exit 1
+    fi
+    
+    echo "${ai_result}"
+}
+
+# Apply theme from AI analysis
+apply_theme() {
+    local ai_result="$1"
+    
+    log_info "Applying theme from AI analysis..."
+    
+    # Call theme application script
+    hyprhue-apply-theme "${ai_result}"
+    
+    if [[ $? -eq 0 ]]; then
+        log_success "Theme applied successfully!"
+        
+        # Send notification
+        if command -v notify-send &> /dev/null; then
+            notify-send "HyprHue" "Theme applied successfully!" -i colors -a "HyprHue"
+        fi
+    else
+        log_error "Failed to apply theme"
+        exit 1
+    fi
+}
+
+# Set wallpaper
+set_wallpaper() {
+    local wallpaper="$1"
+    
+    log_info "Setting wallpaper..."
+    
+    # Copy wallpaper to cache
+    local cached_wallpaper="${CACHE_DIR}/current_wallpaper.jpg"
+    cp "${wallpaper}" "${cached_wallpaper}"
+    
+    # Set wallpaper using hyprpaper
+    if command -v hyprpaper &> /dev/null; then
+        # Update hyprpaper config
+        local hyprpaper_config="${HOME}/.config/hypr/hyprpaper.conf"
+        cat > "${hyprpaper_config}" << EOF
+preload = ${cached_wallpaper}
+wallpaper = ,${cached_wallpaper}
+splash = false
+EOF
+        
+        # Reload hyprpaper
+        pkill hyprpaper || true
+        hyprpaper &
+        disown
+    fi
+    
+    log_success "Wallpaper set successfully!"
+}
+
+# Main function
+main() {
+    # Parse arguments
+    local wallpaper=""
+    local prompt=""
+    
+    case ${1:-} in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        sample)
+            wallpaper=$(get_sample_wallpaper)
+            prompt="${2:-}"
+            ;;
+        "")
+            log_error "No wallpaper specified"
+            show_help
+            exit 1
+            ;;
+        *)
+            wallpaper="$1"
+            prompt="${2:-}"
+            ;;
+    esac
+    
+    # Main workflow
+    check_config
+    validate_wallpaper "${wallpaper}"
+    
+    local ai_result
+    ai_result=$(analyze_wallpaper "${wallpaper}" "${prompt}")
+    
+    apply_theme "${ai_result}"
+    set_wallpaper "${wallpaper}"
+    
+    log_success "Theming complete!"
+}
+
+# Run main function
+main "$@" 
