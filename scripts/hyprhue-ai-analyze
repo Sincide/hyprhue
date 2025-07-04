@@ -232,9 +232,10 @@ call_ollama() {
     
     log_debug "Request payload created"
     
-    # Make API call
+    # Make API call with timeout protection
     local response
-    response=$(curl -s \
+    response=$(timeout $((TIMEOUT + 10)) curl -s \
+        --connect-timeout 10 \
         --max-time "${TIMEOUT}" \
         -X POST \
         -H "Content-Type: application/json" \

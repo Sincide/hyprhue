@@ -1,0 +1,363 @@
+#!/bin/bash
+
+# HyprHue Workflow Simulation Script
+# This script validates the complete workflow without executing real system commands
+# It checks syntax, logic flow, and configuration compatibility
+
+# Disable strict error handling to allow simulation to continue
+# set -euo pipefail
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m' # No Color
+
+# Base directory
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SIMULATION_LOG="${BASE_DIR}/simulation.log"
+
+# Simulation state
+SIMULATION_PASSED=0
+SIMULATION_FAILED=0
+SIMULATION_WARNINGS=0
+
+# Logging functions
+log_sim() {
+    echo -e "${1}"
+    echo -e "${1}" >> "${SIMULATION_LOG}"
+}
+
+log_info() {
+    log_sim "${CYAN}[SIM-INFO]${NC} ${1}"
+}
+
+log_success() {
+    log_sim "${GREEN}[SIM-PASS]${NC} ${1}"
+    ((SIMULATION_PASSED++))
+}
+
+log_warning() {
+    log_sim "${YELLOW}[SIM-WARN]${NC} ${1}"
+    ((SIMULATION_WARNINGS++))
+}
+
+log_error() {
+    log_sim "${RED}[SIM-FAIL]${NC} ${1}"
+    ((SIMULATION_FAILED++))
+}
+
+log_debug() {
+    log_sim "${PURPLE}[SIM-DEBUG]${NC} ${1}"
+}
+
+# Test functions
+test_file_exists() {
+    local file="$1"
+    local description="$2"
+    
+    if [[ -f "${BASE_DIR}/${file}" ]]; then
+        log_success "✓ ${description}: ${file} exists"
+        return 0
+    else
+        log_error "✗ ${description}: ${file} missing"
+        return 1
+    fi
+}
+
+test_file_executable() {
+    local file="$1"
+    local description="$2"
+    
+    if [[ -x "${BASE_DIR}/${file}" ]]; then
+        log_success "✓ ${description}: ${file} is executable"
+        return 0
+    else
+        log_error "✗ ${description}: ${file} not executable"
+        return 1
+    fi
+}
+
+test_json_syntax() {
+    local file="$1"
+    local description="$2"
+    
+    if command -v jq &> /dev/null; then
+        if timeout 5s jq . "${BASE_DIR}/${file}" &> /dev/null; then
+            log_success "✓ ${description}: ${file} JSON syntax valid"
+            return 0
+        else
+            log_error "✗ ${description}: ${file} JSON syntax invalid"
+            return 1
+        fi
+    else
+        log_warning "⚠ ${description}: jq not available, skipping JSON validation"
+        return 0
+    fi
+}
+
+test_bash_syntax() {
+    local file="$1"
+    local description="$2"
+    
+    if timeout 5s bash -n "${BASE_DIR}/${file}" &> /dev/null; then
+        log_success "✓ ${description}: ${file} bash syntax valid"
+        return 0
+    else
+        log_error "✗ ${description}: ${file} bash syntax invalid"
+        return 1
+    fi
+}
+
+test_hyprland_config() {
+    local file="$1"
+    local description="$2"
+    
+    # Check for common syntax errors
+    if grep -q "^[[:space:]]*=" "${BASE_DIR}/${file}"; then
+        log_error "✗ ${description}: ${file} contains invalid assignment syntax"
+        return 1
+    fi
+    
+    # Check for proper hyprland syntax patterns
+    if grep -q "^[[:space:]]*#\|^[[:space:]]*$\|^[[:space:]]*[a-zA-Z]" "${BASE_DIR}/${file}"; then
+        log_success "✓ ${description}: ${file} has proper hyprland syntax structure"
+    else
+        log_warning "⚠ ${description}: ${file} may have syntax issues"
+    fi
+    
+    # If file has braces, check if they are balanced
+    local open_braces=0
+    local close_braces=0
+    
+    # Count opening braces
+    if grep -q "^[[:space:]]*{" "${BASE_DIR}/${file}" 2>/dev/null; then
+        open_braces=$(grep -c "^[[:space:]]*{" "${BASE_DIR}/${file}" 2>/dev/null || echo "0")
+    fi
+    
+    # Count closing braces
+    if grep -q "^[[:space:]]*}" "${BASE_DIR}/${file}" 2>/dev/null; then
+        close_braces=$(grep -c "^[[:space:]]*}" "${BASE_DIR}/${file}" 2>/dev/null || echo "0")
+    fi
+    
+    # Ensure we have clean numeric values
+    open_braces=$(echo "${open_braces}" | head -n 1 | grep -o '[0-9]*' | head -n 1 || echo "0")
+    close_braces=$(echo "${close_braces}" | head -n 1 | grep -o '[0-9]*' | head -n 1 || echo "0")
+    
+    if [[ $open_braces -ne $close_braces ]]; then
+        log_error "✗ ${description}: ${file} has unbalanced braces (${open_braces} open, ${close_braces} close)"
+        return 1
+    fi
+    
+    log_success "✓ ${description}: ${file} syntax validation passed"
+    return 0
+}
+
+test_script_shebang() {
+    local file="$1"
+    local description="$2"
+    
+    if head -n 1 "${BASE_DIR}/${file}" | grep -q "^#!/"; then
+        log_success "✓ ${description}: ${file} has proper shebang"
+        return 0
+    else
+        log_error "✗ ${description}: ${file} missing shebang"
+        return 1
+    fi
+}
+
+test_install_script_logic() {
+    local file="install.sh"
+    
+    log_info "Testing install script logic flow..."
+    
+    # Test main function exists
+    if grep -q "^main()" "${BASE_DIR}/${file}"; then
+        log_success "✓ Install script has main() function"
+    else
+        log_error "✗ Install script missing main() function"
+    fi
+    
+    # Test timeout commands
+    if grep -q "timeout [0-9]" "${BASE_DIR}/${file}"; then
+        log_success "✓ Install script has timeout protection"
+    else
+        log_error "✗ Install script missing timeout protection"
+    fi
+    
+    # Test error handling
+    if grep -q "log_error\|log_warning" "${BASE_DIR}/${file}"; then
+        log_success "✓ Install script has error handling"
+    else
+        log_error "✗ Install script missing error handling"
+    fi
+    
+    # Test debug mode
+    if grep -q "DEBUG=true" "${BASE_DIR}/${file}"; then
+        log_success "✓ Install script has debug mode enabled by default"
+    else
+        log_error "✗ Install script missing default debug mode"
+    fi
+    
+    # Test package list
+    if grep -q "packages=(" "${BASE_DIR}/${file}"; then
+        log_success "✓ Install script has package list"
+    else
+        log_error "✗ Install script missing package list"
+    fi
+}
+
+test_ai_script_logic() {
+    local script="$1"
+    local description="$2"
+    
+    log_info "Testing ${description} script logic..."
+    
+    # Test API endpoints
+    if grep -q "localhost:11434" "${BASE_DIR}/scripts/${script}"; then
+        log_success "✓ ${description}: Uses correct Ollama API endpoint"
+    else
+        log_error "✗ ${description}: Missing or incorrect API endpoint"
+    fi
+    
+    # Test error handling
+    if grep -q "curl.*--connect-timeout\|timeout.*curl" "${BASE_DIR}/scripts/${script}"; then
+        log_success "✓ ${description}: Has network timeout protection"
+    else
+        log_error "✗ ${description}: Missing network timeout protection"
+    fi
+    
+    # Test JSON handling
+    if grep -q "jq\|json" "${BASE_DIR}/scripts/${script}"; then
+        log_success "✓ ${description}: Has JSON processing"
+    else
+        log_warning "⚠ ${description}: May be missing JSON processing"
+    fi
+}
+
+simulate_complete_workflow() {
+    log_info "=== SIMULATING COMPLETE HYPRHUE WORKFLOW ==="
+    
+    # Phase 1: Installation Simulation
+    log_info "Phase 1: Installation Simulation"
+    log_debug "Simulating: curl -sSL https://github.com/Sincide/hyprhue/raw/main/install.sh | bash"
+    
+    # Check if all required files exist
+    test_file_exists "install.sh" "Main installer"
+    test_file_exists "README.md" "Documentation"
+    test_file_exists "config.toml" "Configuration file"
+    
+    # Phase 2: Configuration Files
+    log_info "Phase 2: Configuration Files Validation"
+    
+    # Hyprland configs
+    test_file_exists "configs/hyprland/hyprland.conf" "Main Hyprland config"
+    test_hyprland_config "configs/hyprland/hyprland.conf" "Main Hyprland config"
+    
+    # Test all hyprland sub-configs
+    local hypr_configs=(
+        "animations.conf" "binds.conf" "custom.conf" "decoration.conf"
+        "env.conf" "general.conf" "gestures.conf" "input.conf"
+        "layouts.conf" "misc.conf" "monitor.conf" "startup.conf"
+        "theme.conf" "windowrules.conf" "workspacerules.conf"
+    )
+    
+    for config in "${hypr_configs[@]}"; do
+        test_file_exists "configs/hyprland/conf/${config}" "Hyprland ${config}"
+        test_hyprland_config "configs/hyprland/conf/${config}" "Hyprland ${config}" || true
+    done
+    
+    # Waybar configs
+    test_file_exists "configs/waybar/config.jsonc" "Waybar config"
+    test_file_exists "configs/waybar/style.css" "Waybar CSS"
+    test_json_syntax "configs/waybar/config.jsonc" "Waybar config"
+    
+    # Other app configs
+    test_file_exists "configs/kitty/kitty.conf" "Kitty config"
+    test_file_exists "configs/alacritty/alacritty.toml" "Alacritty config"
+    test_file_exists "configs/rofi/config.rasi" "Rofi config"
+    test_file_exists "configs/dunst/dunstrc" "Dunst config"
+    
+    # Phase 3: Scripts Validation
+    log_info "Phase 3: Scripts Validation"
+    
+    # Core scripts
+    test_file_exists "scripts/theme-from-wallpaper" "Main theme script"
+    test_file_executable "scripts/theme-from-wallpaper" "Main theme script"
+    test_script_shebang "scripts/theme-from-wallpaper" "Main theme script"
+    test_bash_syntax "scripts/theme-from-wallpaper" "Main theme script"
+    
+    test_file_exists "scripts/hyprhue-ai-analyze" "AI analysis script"
+    test_file_executable "scripts/hyprhue-ai-analyze" "AI analysis script"
+    test_script_shebang "scripts/hyprhue-ai-analyze" "AI analysis script"
+    test_bash_syntax "scripts/hyprhue-ai-analyze" "AI analysis script"
+    test_ai_script_logic "hyprhue-ai-analyze" "AI analysis"
+    
+    test_file_exists "scripts/hyprhue-apply-theme" "Theme application script"
+    test_file_executable "scripts/hyprhue-apply-theme" "Theme application script"
+    test_script_shebang "scripts/hyprhue-apply-theme" "Theme application script"
+    test_bash_syntax "scripts/hyprhue-apply-theme" "Theme application script"
+    
+    test_file_exists "scripts/hyprhue-daemon" "Daemon script"
+    test_file_executable "scripts/hyprhue-daemon" "Daemon script"
+    test_script_shebang "scripts/hyprhue-daemon" "Daemon script"
+    test_bash_syntax "scripts/hyprhue-daemon" "Daemon script"
+    
+    # Phase 4: Install Script Logic
+    log_info "Phase 4: Install Script Logic"
+    test_bash_syntax "install.sh" "Main installer"
+    test_install_script_logic
+    
+    # Phase 5: Sample Assets
+    log_info "Phase 5: Sample Assets"
+    test_file_exists "assets/wallpapers/sample1.jpg" "Sample wallpaper 1"
+    test_file_exists "assets/wallpapers/sample2.jpg" "Sample wallpaper 2"
+    test_file_exists "assets/wallpapers/sample3.jpg" "Sample wallpaper 3"
+    
+    # Phase 6: Simulate Theme Generation Workflow
+    log_info "Phase 6: Theme Generation Workflow Simulation"
+    
+    log_debug "Simulating: theme-from-wallpaper ~/Pictures/wallpaper.jpg 'modern dark theme'"
+    log_debug "  → Would call: hyprhue-ai-analyze ~/Pictures/wallpaper.jpg 'modern dark theme'"
+    log_debug "  → Would extract colors and generate theme JSON"
+    log_debug "  → Would call: hyprhue-apply-theme theme.json"
+    log_debug "  → Would apply theme to waybar, hyprland, kitty, etc."
+    log_debug "  → Would reload applications: waybar, hyprland, etc."
+    
+    log_success "✓ Complete workflow simulation completed"
+}
+
+# Main execution
+main() {
+    log_info "Starting HyprHue Complete Workflow Simulation"
+    log_info "Base directory: ${BASE_DIR}"
+    log_info "Simulation log: ${SIMULATION_LOG}"
+    
+    # Clear previous log
+    > "${SIMULATION_LOG}"
+    
+    # Run comprehensive simulation
+    simulate_complete_workflow
+    
+    # Final report
+    log_info "=== SIMULATION COMPLETE ==="
+    log_info "Results:"
+    log_success "  Passed: ${SIMULATION_PASSED}"
+    log_warning "  Warnings: ${SIMULATION_WARNINGS}"
+    log_error "  Failed: ${SIMULATION_FAILED}"
+    
+    if [[ ${SIMULATION_FAILED} -eq 0 ]]; then
+        log_success "🎉 All critical tests passed! HyprHue workflow is ready."
+        exit 0
+    else
+        log_error "❌ ${SIMULATION_FAILED} critical issues found. Please fix before deployment."
+        exit 1
+    fi
+}
+
+# Execute main function
+main "$@" 

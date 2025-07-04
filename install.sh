@@ -211,13 +211,22 @@ install_yay() {
     cd "${temp_dir}"
     
     # Install git and base-devel if not present (required for AUR operations)
-    sudo pacman -S --needed --noconfirm git base-devel
+    timeout 300 sudo pacman -S --needed --noconfirm git base-devel || {
+        log_warning "Failed to install base build dependencies"
+        return 1
+    }
     
     # Download and install yay-bin (precompiled binary)
     log_debug "Downloading yay-bin from AUR..."
-    git clone https://aur.archlinux.org/yay-bin.git
+    timeout 120 git clone https://aur.archlinux.org/yay-bin.git || {
+        log_warning "Failed to clone yay-bin repository"
+        return 1
+    }
     cd yay-bin
-    makepkg -si --noconfirm
+    timeout 600 makepkg -si --noconfirm || {
+        log_warning "Failed to build/install yay-bin"
+        return 1
+    }
     
     # Clean up
     cd "${USER_HOME}"
@@ -324,20 +333,23 @@ install_dependencies() {
     
     # Update package database and system first to avoid conflicts
     log_info "Updating package database and system..."
-    sudo pacman -Syu --noconfirm
+    timeout 300 sudo pacman -Syu --noconfirm || {
+        log_warning "System update timed out after 5 minutes or failed"
+        log_info "Continuing with package installation..."
+    }
     
     # Install packages with better conflict resolution
     log_info "Installing packages (this may take a while)..."
     
     # Try to install all packages first
-    if ! yay -S --needed --noconfirm --overwrite="*" "${packages[@]}"; then
-        log_warning "Some packages failed to install, trying individual installation..."
+    if ! timeout 1800 yay -S --needed --noconfirm --overwrite="*" "${packages[@]}"; then
+        log_warning "Bulk package installation timed out or failed, trying individual installation..."
         
         # Install packages individually to handle conflicts better
         for package in "${packages[@]}"; do
             log_debug "Installing: ${package}"
-            if ! yay -S --needed --noconfirm --overwrite="*" "${package}"; then
-                log_warning "Failed to install ${package}, skipping..."
+            if ! timeout 300 yay -S --needed --noconfirm --overwrite="*" "${package}"; then
+                log_warning "Failed to install ${package} (timeout or error), skipping..."
             fi
         done
     fi
@@ -352,13 +364,16 @@ install_ollama() {
     # Install Ollama
     if ! command -v ollama &> /dev/null; then
         log_info "Installing Ollama..."
-        yay -S --needed --noconfirm ollama
+        timeout 300 yay -S --needed --noconfirm ollama || {
+            log_warning "Ollama installation timed out or failed"
+            log_info "Continuing with configuration..."
+        }
     fi
     
     # Start Ollama service
     log_info "Starting Ollama service..."
-    sudo systemctl enable ollama
-    sudo systemctl start ollama
+    timeout 30 sudo systemctl enable ollama || log_warning "Failed to enable Ollama service"
+    timeout 30 sudo systemctl start ollama || log_warning "Failed to start Ollama service"
     
     # Wait for Ollama service to be active
     log_info "Waiting for Ollama service to start..."
