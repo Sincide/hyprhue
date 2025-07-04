@@ -2,18 +2,20 @@
 /* Colors will be dynamically replaced by the theming system */
 
 * {
-    font-family: 'JetBrains Mono', 'Font Awesome 6 Free', monospace;
-    font-size: 14px;
-    min-height: 0;
+    font-family: "JetBrains Mono", "Font Awesome 6 Free", monospace;
+    font-size: 12px;
+    color: #cdd6f4;
+    background: transparent;
     border: none;
     border-radius: 0;
+    margin: 0;
+    padding: 0;
 }
 
 window#waybar {
-    background-color: rgba(30, 30, 46, 0.8);
+    background: rgba(30, 30, 46, 0.9);
     border-bottom: 2px solid #89b4fa;
     color: #cdd6f4;
-    transition: background-color 0.3s ease;
 }
 
 button {
@@ -27,35 +29,36 @@ button:hover {
     box-shadow: inset 0 -3px #89b4fa;
 }
 
+#workspaces {
+    background: rgba(49, 50, 68, 0.8);
+    border-radius: 8px;
+    margin: 4px 4px 4px 8px;
+    padding: 0 4px;
+}
+
 #workspaces button {
-    padding: 0 8px;
-    background-color: transparent;
-    color: #bac2de;
+    background: transparent;
+    color: #6c7086;
     border-radius: 4px;
+    padding: 0 6px;
     margin: 2px;
+    min-width: 20px;
     transition: all 0.3s ease;
 }
 
 #workspaces button:hover {
-    background: #313244;
-    color: #cdd6f4;
+    background: rgba(116, 199, 236, 0.3);
+    color: #89b4fa;
 }
 
 #workspaces button.active {
     background: #89b4fa;
     color: #1e1e2e;
-    font-weight: bold;
 }
 
 #workspaces button.urgent {
     background: #f38ba8;
     color: #1e1e2e;
-    animation: blink 1s linear infinite;
-}
-
-@keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0.5; }
 }
 
 #mode {
@@ -74,29 +77,32 @@ button:hover {
 }
 
 #window {
+    background: rgba(49, 50, 68, 0.8);
+    border-radius: 8px;
+    padding: 0 12px;
+    margin: 4px;
     color: #cdd6f4;
-    font-weight: bold;
-    padding: 0 10px;
+    font-weight: normal;
 }
 
 #idle_inhibitor {
-    background-color: #313244;
-    color: #cdd6f4;
-    padding: 0 10px;
-    border-radius: 4px;
+    background: rgba(49, 50, 68, 0.8);
+    border-radius: 8px;
+    padding: 0 8px;
     margin: 2px;
+    color: #f9e2af;
 }
 
 #idle_inhibitor.activated {
-    background-color: #74c7ec;
+    background: #f9e2af;
     color: #1e1e2e;
 }
 
 #tray {
-    background-color: #313244;
-    border-radius: 4px;
-    padding: 0 5px;
-    margin: 2px;
+    background: rgba(49, 50, 68, 0.8);
+    border-radius: 8px;
+    padding: 0 8px;
+    margin: 4px 8px 4px 4px;
 }
 
 #tray > .passive {
@@ -109,44 +115,46 @@ button:hover {
 }
 
 #clock {
-    background-color: #89b4fa;
-    color: #1e1e2e;
-    padding: 0 10px;
-    border-radius: 4px;
-    margin: 2px;
+    background: rgba(49, 50, 68, 0.8);
+    border-radius: 8px;
+    padding: 0 12px;
+    margin: 4px;
+    color: #89b4fa;
     font-weight: bold;
 }
 
-#cpu, #memory, #temperature {
-    background-color: #313244;
-    color: #cdd6f4;
-    padding: 0 10px;
-    border-radius: 4px;
+#cpu, #memory, #temperature, #battery {
+    background: rgba(49, 50, 68, 0.8);
+    border-radius: 8px;
+    padding: 0 8px;
     margin: 2px;
+    color: #a6e3a1;
 }
 
-#cpu.warning, #memory.warning, #temperature.warning {
+#cpu {
+    color: #f9e2af;
+}
+
+#memory {
+    color: #f38ba8;
+}
+
+#temperature {
+    color: #fab387;
+}
+
+#temperature.warning {
     background-color: #f9e2af;
     color: #1e1e2e;
 }
 
-#cpu.critical, #memory.critical, #temperature.critical {
-    background-color: #f38ba8;
+#temperature.critical {
+    background: #f38ba8;
     color: #1e1e2e;
-    animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
 }
 
 #battery {
-    background-color: #313244;
-    color: #cdd6f4;
-    padding: 0 10px;
-    border-radius: 4px;
-    margin: 2px;
+    color: #a6e3a1;
 }
 
 #battery.charging {
@@ -154,27 +162,26 @@ button:hover {
     color: #1e1e2e;
 }
 
-#battery.warning:not(.charging) {
-    background-color: #f9e2af;
+#battery.warning {
+    background: #f9e2af;
     color: #1e1e2e;
 }
 
-#battery.critical:not(.charging) {
-    background-color: #f38ba8;
+#battery.critical {
+    background: #f38ba8;
     color: #1e1e2e;
-    animation: pulse 2s ease-in-out infinite;
 }
 
 #network {
-    background-color: #313244;
-    color: #cdd6f4;
-    padding: 0 10px;
-    border-radius: 4px;
+    background: rgba(49, 50, 68, 0.8);
+    border-radius: 8px;
+    padding: 0 8px;
     margin: 2px;
+    color: #89b4fa;
 }
 
 #network.disconnected {
-    background-color: #f38ba8;
+    background: #f38ba8;
     color: #1e1e2e;
 }
 
@@ -189,15 +196,15 @@ button:hover {
 }
 
 #pulseaudio {
-    background-color: #313244;
-    color: #cdd6f4;
-    padding: 0 10px;
-    border-radius: 4px;
+    background: rgba(49, 50, 68, 0.8);
+    border-radius: 8px;
+    padding: 0 8px;
     margin: 2px;
+    color: #cba6f7;
 }
 
 #pulseaudio.muted {
-    background-color: #f38ba8;
+    background: #6c7086;
     color: #1e1e2e;
 }
 
@@ -220,4 +227,16 @@ button:hover {
     #window {
         font-size: 12px;
     }
+}
+
+tooltip {
+    background: rgba(30, 30, 46, 0.95);
+    border: 1px solid #89b4fa;
+    border-radius: 8px;
+    color: #cdd6f4;
+}
+
+tooltip label {
+    color: #cdd6f4;
+    padding: 4px 8px;
 } 

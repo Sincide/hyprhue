@@ -3,9 +3,9 @@
     "position": "top",
     "height": 30,
     "spacing": 4,
-    "modules-left": ["hyprland/workspaces", "hyprland/mode", "hyprland/scratchpad"],
-    "modules-center": ["hyprland/window"],
-    "modules-right": ["idle_inhibitor", "pulseaudio", "network", "cpu", "memory", "temperature", "battery", "clock", "tray"],
+    "modules-left": ["hyprland/workspaces", "hyprland/window"],
+    "modules-center": ["clock"],
+    "modules-right": ["idle_inhibitor", "pulseaudio", "network", "cpu", "memory", "temperature", "battery", "tray"],
     
     "hyprland/workspaces": {
         "disable-scroll": true,
@@ -21,20 +21,11 @@
             "7": "󰲬",
             "8": "󰲮",
             "9": "󰲰",
-            "10": "󰿬"
+            "10": "󰿬",
+            "urgent": "",
+            "active": "",
+            "default": ""
         }
-    },
-    
-    "hyprland/mode": {
-        "format": "<span style=\"italic\">{}</span>"
-    },
-    
-    "hyprland/scratchpad": {
-        "format": "{icon} {count}",
-        "show-empty": false,
-        "format-icons": ["", ""],
-        "tooltip": true,
-        "tooltip-format": "{app}: {title}"
     },
     
     "hyprland/window": {
