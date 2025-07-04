@@ -174,19 +174,7 @@ check_nvidia_gpu() {
     fi
 }
 
-# Check if Hyprland is installed
-check_hyprland() {
-    log_info "Checking if Hyprland is installed..."
-    
-    if ! command -v hyprctl &> /dev/null; then
-        log_error "Hyprland is not installed!"
-        log_error "Please install Hyprland first:"
-        log_error "  yay -S hyprland"
-        exit 1
-    fi
-    
-    log_success "Hyprland is installed"
-}
+
 
 # Install yay-bin if not present
 install_yay() {
@@ -645,7 +633,6 @@ main() {
     check_arch_distro
     install_yay
     check_nvidia_gpu
-    check_hyprland
     install_dependencies
     install_ollama
     create_directories
