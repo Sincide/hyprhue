@@ -15,7 +15,7 @@ set -euo pipefail
 # Script information
 SCRIPT_NAME="HyprHue Installer"
 SCRIPT_VERSION="1.0.0"
-REPO_URL="https://github.com/yourusername/hyprhue"
+REPO_URL="https://github.com/Sincide/hyprhue"
 REPO_BRANCH="main"
 
 # Colors for output
