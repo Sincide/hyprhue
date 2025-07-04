@@ -29,7 +29,7 @@ WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
 # Global variables
-DEBUG=false
+DEBUG=true  # Always enable debugging by default
 FORCE_INSTALL=false
 SKIP_DEPENDENCIES=false
 USER_HOME="${HOME}"
@@ -61,9 +61,8 @@ log_error() {
 }
 
 log_debug() {
-    if [[ "${DEBUG}" == "true" ]]; then
-        log "${PURPLE}[DEBUG]${NC} ${1}"
-    fi
+    # Always show debug information for comprehensive troubleshooting
+    log "${PURPLE}[DEBUG]${NC} ${1}"
 }
 
 # Safe execution function - runs command and continues on failure
@@ -143,7 +142,7 @@ show_help() {
     log "${WHITE}Usage:${NC} $0 [OPTIONS]"
     log ""
     log "${WHITE}Options:${NC}"
-    log "  --debug         Enable debug mode with verbose output"
+    log "  --debug         Debug mode is enabled by default"
     log "  --force         Force installation even if already installed"
     log "  --skip-deps     Skip dependency installation"
     log "  --help, -h      Show this help message"
