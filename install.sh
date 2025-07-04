@@ -246,18 +246,10 @@ install_dependencies() {
         "gvfs-nfs"
         
         # Audio
-        "pipewire"
-        "pipewire-pulse"
-        "pipewire-alsa"
-        "pipewire-jack"
-        "wireplumber"
         "pavucontrol"
         
         # Network
-        "networkmanager"
         "network-manager-applet"
-        "bluez"
-        "bluez-utils"
         "blueman"
         
         # Fonts
@@ -290,12 +282,7 @@ install_dependencies() {
         "htop"
         
         # Development tools
-        "git"
-        "curl"
-        "wget"
         "jq"
-        "python"
-        "python-pip"
         "python-pillow"
         "python-requests"
         "python-colorthief"
@@ -309,18 +296,30 @@ install_dependencies() {
         # Other utilities
         "xdg-utils"
         "xdg-user-dirs"
-        "unzip"
         "p7zip"
-        "rsync"
     )
     
     log_debug "Installing packages: ${packages[*]}"
     
-    # Update package database
-    sudo pacman -Sy
+    # Update package database and system first to avoid conflicts
+    log_info "Updating package database and system..."
+    sudo pacman -Syu --noconfirm
     
-    # Install packages
-    yay -S --needed --noconfirm "${packages[@]}"
+    # Install packages with better conflict resolution
+    log_info "Installing packages (this may take a while)..."
+    
+    # Try to install all packages first
+    if ! yay -S --needed --noconfirm --overwrite="*" "${packages[@]}"; then
+        log_warning "Some packages failed to install, trying individual installation..."
+        
+        # Install packages individually to handle conflicts better
+        for package in "${packages[@]}"; do
+            log_debug "Installing: ${package}"
+            if ! yay -S --needed --noconfirm --overwrite="*" "${package}"; then
+                log_warning "Failed to install ${package}, skipping..."
+            fi
+        done
+    fi
     
     log_success "System dependencies installed"
 }
